@@ -1,0 +1,8 @@
+orchestrator_build:
+    build: .
+    #command: 'cp -v /orchestrator-3.0.11-1.x86_64.rpm /artifacts'
+    command: 'make build'
+    volumes:
+      - .:/orchestrator
+    working_dir: /orchestrator
+# reminder to me: WARNING: Image for service orchestrator_build was built because it did not already exist. To rebuild this image you must use `docker-compose build` or `docker-compose up --build`.

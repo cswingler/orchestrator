@@ -10,8 +10,9 @@ mydir=$(dirname $0)
 GIT_COMMIT=$(git rev-parse HEAD)
 RELEASE_VERSION=
 RELEASE_SUBVERSION=
+ITERATION=2
 TOPDIR=/tmp/orchestrator-release
-export RELEASE_VERSION TOPDIR
+export RELEASE_VERSION TOPDIR ITERATION
 export GO15VENDOREXPERIMENT=1
 
 usage() {
@@ -108,20 +109,20 @@ function package() {
       tar -C $builddir/orchestrator -czf $TOPDIR/orchestrator-"${RELEASE_VERSION}"-$target-$arch.tar.gz ./
 
       echo "Creating Distro full packages"
-      fpm -v "${RELEASE_VERSION}" --epoch 1 -f -s dir -n orchestrator -m shlomi-noach --description "MySQL replication topology management and HA" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator --prefix=/ --config-files /usr/local/orchestrator/resources/public/css/custom.css --config-files /usr/local/orchestrator/resources/public/js/custom.js -t rpm .
-      fpm -v "${RELEASE_VERSION}" --epoch 1 -f -s dir -n orchestrator -m shlomi-noach --description "MySQL replication topology management and HA" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator --prefix=/ --config-files /usr/local/orchestrator/resources/public/css/custom.css --config-files /usr/local/orchestrator/resources/public/js/custom.js -t deb .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1 -f -s dir -n orchestrator -m shlomi-noach --description "MySQL replication topology management and HA" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator --prefix=/ --config-files /usr/local/orchestrator/resources/public/css/custom.css --config-files /usr/local/orchestrator/resources/public/js/custom.js -t rpm .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1 -f -s dir -n orchestrator -m shlomi-noach --description "MySQL replication topology management and HA" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator --prefix=/ --config-files /usr/local/orchestrator/resources/public/css/custom.css --config-files /usr/local/orchestrator/resources/public/js/custom.js -t deb .
 
       cd $TOPDIR
       # orchestrator-cli packaging -- executable only
       echo "Creating Distro cli packages"
-      fpm -v "${RELEASE_VERSION}" --epoch 1  -f -s dir -n orchestrator-cli -m shlomi-noach --description "MySQL replication topology management and HA: binary only" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-cli --prefix=/ -t rpm .
-      fpm -v "${RELEASE_VERSION}" --epoch 1  -f -s dir -n orchestrator-cli -m shlomi-noach --description "MySQL replication topology management and HA: binary only" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-cli --prefix=/ -t deb --deb-no-default-config-files .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1  -f -s dir -n orchestrator-cli -m shlomi-noach --description "MySQL replication topology management and HA: binary only" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-cli --prefix=/ -t rpm .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1  -f -s dir -n orchestrator-cli -m shlomi-noach --description "MySQL replication topology management and HA: binary only" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-cli --prefix=/ -t deb --deb-no-default-config-files .
 
       cd $TOPDIR
       # orchestrator-client packaging -- shell script only
       echo "Creating Distro orchestrator-client packages"
-      fpm -v "${RELEASE_VERSION}" --epoch 1  -f -s dir -n orchestrator-client -m shlomi-noach --description "MySQL replication topology management and HA: client script" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-client --prefix=/ -t rpm .
-      fpm -v "${RELEASE_VERSION}" --epoch 1  -f -s dir -n orchestrator-client -m shlomi-noach --description "MySQL replication topology management and HA: client script" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-client --prefix=/ -t deb --deb-no-default-config-files .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1  -f -s dir -n orchestrator-client -m shlomi-noach --description "MySQL replication topology management and HA: client script" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-client --prefix=/ -t rpm .
+      fpm -v "${RELEASE_VERSION}" --iteration "${ITERATION}" --epoch 1  -f -s dir -n orchestrator-client -m shlomi-noach --description "MySQL replication topology management and HA: client script" --url "https://github.com/github/orchestrator" --vendor "GitHub" --license "Apache 2.0" -C $builddir/orchestrator-client --prefix=/ -t deb --deb-no-default-config-files .
       ;;
     'darwin')
       echo "Creating Darwin full Package"
@@ -152,9 +153,10 @@ function build() {
   arch="$2"
   builddir="$3"
   prefix="$4"
-  ldflags="-X main.AppVersion=${RELEASE_VERSION} -X main.GitCommit=${GIT_COMMIT}"
+  ldflags="-s -X main.AppVersion=${RELEASE_VERSION} -X main.GitCommit=${GIT_COMMIT} '-extldflags=-v -static'"
   echo "Building via $(go version)"
   gobuild="go build -i ${opt_race} -ldflags \"$ldflags\" -o $builddir/orchestrator${prefix}/orchestrator/orchestrator go/cmd/orchestrator/main.go"
+  echo "gobuild command is '$gobuild'"
 
   case $os in
     'linux')
